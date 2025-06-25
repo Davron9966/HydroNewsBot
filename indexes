@@ -1,0 +1,28 @@
+import requests
+import datetime
+import schedule
+import time
+
+BOT_TOKEN = '7966275365:AAHiOhxT_IeUnchvhwbi8eOjWGeNN_YaT9s'
+CHAT_ID = '1611202'
+
+def get_news():
+    news = [
+        "🔋 Plug Power: акции выросли на 3.4% после новости о контракте с Amazon",
+        "🌍 Германия запустила крупнейший в Европе водородный поезд",
+        "⚙️ Siemens вложит $200M в производство H₂-турбин"
+    ]
+    today = datetime.datetime.now().strftime("%d.%m.%Y")
+    text = f"📰 Новости по водородной энергетике и Plug Power — {today}\n\n" + "\n".join(news)
+
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    data = {"chat_id": CHAT_ID, "text": text}
+    response = requests.post(url, data=data)
+    print(response.status_code, response.text)
+
+# Ташкент — GMT+5. Render использует UTC, значит 04:30 UTC = 09:30 Tashkent
+schedule.every().day.at("04:30").do(get_news)
+
+while True:
+    schedule.run_pending()
+    time.sleep(30)
