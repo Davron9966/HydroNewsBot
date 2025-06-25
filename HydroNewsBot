@@ -3,11 +3,17 @@ import datetime
 import schedule
 import time
 import os
+import threading
+from flask import Flask
 
 BOT_TOKEN = '7966275365:AAHiOhxT_IeUnchvhwbi8eOjWGeNN_YaT9s'
 CHAT_ID = '1611202'
-port = int(os.environ.get('PORT', 10000))
-app.run(host='0.0.0.0', port=port)
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "HydroNewsBot is running!"
 
 def get_news():
     news = [
@@ -23,9 +29,17 @@ def get_news():
     response = requests.post(url, data=data)
     print(response.status_code, response.text)
 
-# Ташкент — GMT+5. Render использует UTC, значит 04:30 UTC = 09:30 Tashkent
-schedule.every().day.at("04:30").do(get_news)
+# Запускаем планировщик в отдельном потоке
+def run_scheduler():
+    schedule.every().day.at("04:30").do(get_news)  # Render = UTC, Ташкент = UTC+5
+    while True:
+        schedule.run_pending()
+        time.sleep(30)
 
-while True:
-    schedule.run_pending()
-    time.sleep(30)
+if __name__ == '__main__':
+    # Запуск фонового потока
+    threading.Thread(target=run_scheduler).start()
+    
+    # Запуск веб-сервера Flask (для Render)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
